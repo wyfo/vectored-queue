@@ -58,7 +58,7 @@ where
         self.total_size
     }
 
-    pub fn frame<'b: 'a>(
+    pub fn frame<'b>(
         &mut self,
         range: impl RangeBounds<usize>,
         mut header: Option<IoSlice<'b>>,
