@@ -8,7 +8,8 @@ use std::{
 
 use crate::{
     error::{DequeueError, EnqueueError, TryEnqueueError},
-    TryDequeueResult, Vectored, VectoredQueue,
+    queue::{TryDequeueResult, VectoredQueue},
+    vectored::Vectored,
 };
 
 pub struct SyncVectoredQueue<T> {

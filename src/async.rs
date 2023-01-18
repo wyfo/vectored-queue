@@ -4,7 +4,8 @@ use futures::task::AtomicWaker;
 
 use crate::{
     error::{DequeueError, EnqueueError, TryEnqueueError},
-    TryDequeueResult, Vectored, VectoredQueue,
+    queue::{TryDequeueResult, VectoredQueue},
+    vectored::Vectored,
 };
 
 pub struct AsyncVectoredQueue<T> {
