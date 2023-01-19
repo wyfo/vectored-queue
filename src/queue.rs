@@ -142,7 +142,7 @@ where
         Ok(())
     }
 
-    pub fn try_dequeue(&self) -> Result<TryDequeueResult<T>, DequeueError> {
+    pub fn try_dequeue_vectored(&self) -> Result<TryDequeueResult<T>, DequeueError> {
         let pending_dequeue = self.pending_dequeue.swap(usize::MAX, Ordering::Relaxed);
         if pending_dequeue == usize::MAX {
             return Err(DequeueError::Conflict);
@@ -275,16 +275,19 @@ mod test {
         };
         // queue.try_enqueue(b1).unwrap();
         queue.try_enqueue(b2).unwrap();
-        let vectored = queue.try_dequeue().unwrap().vectored().unwrap();
+        let vectored = queue.try_dequeue_vectored().unwrap().vectored().unwrap();
         queue.try_enqueue(b3).unwrap();
         assert_eq!(vectored.total_size(), 1);
         assert_eq!(collect(&vectored), vec![2]);
         // assert_eq!(vectored.total_size(), 3);
         // assert_eq!(collect(&vectored), vec![0, 1, 2]);
-        assert!(matches!(queue.try_dequeue(), Err(DequeueError::Conflict)));
+        assert!(matches!(
+            queue.try_dequeue_vectored(),
+            Err(DequeueError::Conflict)
+        ));
         drop(vectored);
         queue.try_enqueue(b4).unwrap();
-        let vectored = queue.try_dequeue().unwrap().vectored().unwrap();
+        let vectored = queue.try_dequeue_vectored().unwrap().vectored().unwrap();
         assert_eq!(vectored.total_size(), 3);
         assert_eq!(collect(&vectored), vec![3, 4, 5]);
     }

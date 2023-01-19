@@ -91,21 +91,21 @@ where
         Ok(())
     }
 
-    pub fn try_dequeue(&self) -> Result<TryDequeueResult<T>, DequeueError> {
-        let res = self.queue.try_dequeue()?;
+    pub fn try_dequeue_vectored(&self) -> Result<TryDequeueResult<T>, DequeueError> {
+        let res = self.queue.try_dequeue_vectored()?;
         if matches!(res, TryDequeueResult::Vectored(_)) {
             self.notify.notify_waiters();
         }
         Ok(res)
     }
 
-    pub async fn dequeue(&self) -> Result<Vectored<T>, DequeueError> {
+    pub async fn dequeue_vectored(&self) -> Result<Vectored<T>, DequeueError> {
         futures::future::poll_fn(|cx| {
-            if let Some(vectored) = self.try_dequeue()?.vectored() {
+            if let Some(vectored) = self.try_dequeue_vectored()?.vectored() {
                 return Poll::Ready(Ok(vectored));
             }
             self.waker.register(cx.waker());
-            if let Some(vectored) = self.try_dequeue()?.vectored() {
+            if let Some(vectored) = self.try_dequeue_vectored()?.vectored() {
                 return Poll::Ready(Ok(vectored));
             }
             Poll::Pending

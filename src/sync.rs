@@ -134,19 +134,22 @@ where
         Ok(())
     }
 
-    pub fn try_dequeue(&self) -> Result<TryDequeueResult<T>, DequeueError> {
-        let res = self.queue.try_dequeue()?;
+    pub fn try_dequeue_vectored(&self) -> Result<TryDequeueResult<T>, DequeueError> {
+        let res = self.queue.try_dequeue_vectored()?;
         if matches!(res, TryDequeueResult::Vectored(_)) {
             self.cond_var.notify_all();
         }
         Ok(res)
     }
 
-    fn dequeue_wait(&self, timeout: Option<Duration>) -> Result<TryDequeueResult<T>, DequeueError> {
+    fn dequeue_vectored_wait(
+        &self,
+        timeout: Option<Duration>,
+    ) -> Result<TryDequeueResult<T>, DequeueError> {
         let mut lock = self.lock.lock().unwrap();
         loop {
             self.wait_dequeue.store(true, Ordering::Relaxed);
-            let res = self.try_dequeue()?;
+            let res = self.try_dequeue_vectored()?;
             if matches!(res, TryDequeueResult::Vectored(_)) {
                 return Ok(res);
             }
@@ -161,14 +164,14 @@ where
         }
     }
 
-    pub fn try_dequeue_timeout(
+    pub fn try_dequeue_vectored_timeout(
         &self,
         timeout: Duration,
     ) -> Result<TryDequeueResult<T>, DequeueError> {
-        self.dequeue_wait(Some(timeout))
+        self.dequeue_vectored_wait(Some(timeout))
     }
 
-    pub fn dequeue(&self) -> Result<Vectored<T>, DequeueError> {
-        Ok(self.dequeue_wait(None)?.vectored().unwrap())
+    pub fn dequeue_vectored(&self) -> Result<Vectored<T>, DequeueError> {
+        Ok(self.dequeue_vectored_wait(None)?.vectored().unwrap())
     }
 }
